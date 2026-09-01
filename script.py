@@ -1,5 +1,11 @@
 import xml.etree.ElementTree as ET
+import os 
+from dotenv import load_dotenv
+import smtplib
+from email.message import EmailMessage
 
+
+load_dotenv()
 
 def texto(no_pai, etiqueta):
     no = no_pai.find(etiqueta)
@@ -51,6 +57,18 @@ def formatar(adicionados, removidos, modificados):
 
     return resultado
 
+def enviar(corpo):
+    mensagem = EmailMessage()
+    mensagem["From"] = os.getenv("REMETENTE")
+    mensagem["To"] = os.getenv("DESTINATARIO")
+    mensagem["Subject"] = "Alterações na lista da ONU"
+    mensagem.set_content(corpo)
+
+    with smtplib.SMTP(os.getenv("BREVO_SERVIDOR"), int(os.getenv("BREVO_PORTA"))) as smtp:
+        smtp.starttls()
+        smtp.login(os.getenv("BREVO_UTILIZADOR"), os.getenv("BREVO_CHAVE"))
+        smtp.send_message(mensagem)
+
 antiga = carregar("xml1.xml")
 nova = carregar("xml2.xml")
 comuns = antiga.keys() & nova.keys()
@@ -69,6 +87,11 @@ for ref in comuns:
                 }
         modificados[ref] = campos
 
+corpo_email = formatar(adicionados, removidos, modificados)
 
-print(formatar(adicionados, removidos, modificados))
+
+if corpo_email:
+    enviar(corpo_email)
+
+
 
