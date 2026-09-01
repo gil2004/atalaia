@@ -32,13 +32,17 @@ xml2.xml foi criado a partir de xml1.xml com três alterações deliberadas:
 - Chaves comuns às duas versões: 735; sem alterações: 734
 - Total em ambos os ficheiros: 736
 
+Estes dois ficheiros são o primeiro caso do conjunto de avaliação. Não
+podem ser perdidos quando a ingestão passar a automática — guardar cópia
+fora da pasta de trabalho.
+
 ### Implementação
 - carregar(caminho) devolve um dicionário indexado por REFERENCE_NUMBER,
   em que cada valor é um dicionário com os campos da entidade.
 - Adições e remoções por diferença de conjuntos sobre as chaves.
 - Modificações: para as chaves comuns, comparação dos registos e, quando
   diferem, comparação campo a campo.
-- Saída: {referência: {campo: {"old": valor, "new": valor}}}
+- Saída das modificações: {referência: {campo: {"old": valor, "new": valor}}}
   Contém apenas os campos que mudaram — é a entrada da camada de LLM e o
   que garante que o resumo é rastreável a um campo alterado.
 - formatar() converte o diff em texto legível. Secções vazias não são
@@ -53,8 +57,8 @@ teste, sem falsos positivos nas restantes entidades.
 ### Higiene do repositório
 Os ficheiros XML tinham entrado nos primeiros commits. O histórico foi
 recriado do zero (remoção da pasta .git e novo git init) com .gitignore
-em vigor desde o primeiro commit. O .gitignore cobre .env, *.xml e
-__pycache__/.
+em vigor desde o primeiro commit. O .gitignore cobre .env, *.xml,
+__pycache__/ e .venv/.
 Os ficheiros de dados não pertencem ao repositório de código: a versão de
 trabalho vem sempre da fonte, e o histórico de versões terá o seu próprio
 armazenamento com hash e timestamp.
@@ -75,12 +79,19 @@ do SDK. Evita uma dependência e mantém o código portável: trocar de
 fornecedor implica mudar endereço e credenciais, não reescrever o envio.
 Mesmo critério que levou a preferir xml.etree ao lxml.
 
-### Gestão de segredos
-Credenciais em variáveis de ambiente lidas de um .env fora do controlo de
-versões, nunca no código. Motivo: um segredo que entra no histórico do git
-não sai mais, mesmo que seja apagado depois.
+### Gestão de segredos e configuração
+Credenciais e configuração em variáveis de ambiente lidas de um .env fora
+do controlo de versões, nunca no código. Motivo: um segredo que entra no
+histórico do git não sai mais, mesmo que seja apagado depois.
 Usada uma chave SMTP dedicada e revogável, não uma palavra-passe de conta
 — princípio do menor privilégio.
+O destinatário, o remetente, o servidor e a porta também são configuração:
+mudam entre ambientes e não devem obrigar a alterar código.
+
+### Ambiente reproduzível
+Ambiente virtual em .venv, dependências declaradas em requirements.txt.
+Única dependência externa até agora: python-dotenv. É a base do que o
+Dockerfile vai formalizar.
 
 ## Riscos e verificações pendentes
 - A raiz do XML tem um atributo dateGenerated que muda a cada publicação.
@@ -98,6 +109,9 @@ Usada uma chave SMTP dedicada e revogável, não uma palavra-passe de conta
 - O ciclo de campos percorre as chaves da versão nova. Campos removidos do
   esquema passam despercebidos; campos novos provocam KeyError.
   Solução: percorrer a união das chaves das duas versões.
+- A chave SMTP expira a 2027-08-27. Um sistema de alertas que deixa de
+  alertar falha em silêncio: é preciso monitorizar a execução, não apenas
+  o envio.
 
 ## Dívida técnica assumida
 - Envio sem domínio verificado. Prejudica a entregabilidade a prazo,
@@ -105,10 +119,20 @@ Usada uma chave SMTP dedicada e revogável, não uma palavra-passe de conta
   com SPF, DKIM e DMARC.
 - Chave SMTP sem restrição por IP. Não ativada porque o IP doméstico é
   dinâmico; ativar quando o sistema passar para servidor com IP fixo.
+- os.getenv devolve None em silêncio quando a variável não existe.
+  Para configuração obrigatória, convém falhar cedo e alto.
 
 ## Por fazer
-- Envio de email por SMTP com credenciais em variáveis de ambiente.
-- Ingestão agendada com armazenamento imutável, hash e timestamp.
+- Agrupar o resultado da comparação (adicionados, removidos, modificados)
+  numa estrutura única. É o que a camada de LLM, os testes e o
+  armazenamento vão consumir; três variáveis soltas obrigam a passar três
+  argumentos por todo o lado.
+- Descarregar a fonte automaticamente e guardar cada versão com hash e
+  timestamp. Implica decidir onde vivem os ficheiros, como se nomeiam e
+  como o programa identifica a última versão.
+- Agendamento e execução autónoma: container e máquina que não seja o
+  portátil.
+- Publicar no GitHub com README.
 - Estender o parser a ENTITIES (esquema parcialmente diferente do de
   INDIVIDUALS).
 - Alargar de 4 para todos os campos relevantes, incluindo listas (alcunhas,
