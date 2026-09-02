@@ -72,8 +72,30 @@ def enviar(corpo):
         smtp.login(os.getenv("BREVO_UTILIZADOR"), os.getenv("BREVO_CHAVE"))
         smtp.send_message(mensagem)
 
-antiga = carregar("xml1.xml")
-nova = carregar("xml2.xml")
+def criar_ficheiro():
+    conteudo = urllib.request.urlopen(os.getenv("URL_ONU")).read()
+    hash_ficheiro = hashlib.sha256(conteudo).hexdigest()
+    carimbo = datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    caminho = f"dados/ONU/ONU_{carimbo}.xml"
+
+    os.makedirs("dados/ONU", exist_ok=True)
+    with open(caminho, "wb") as f:
+        f.write(conteudo)
+
+    with open("dados/ONU/registo.csv", "a") as f:
+        f.write(f"{carimbo},{caminho},{hash_ficheiro},{len(conteudo)}\n")
+
+    return caminho
+
+caminho_novo = criar_ficheiro()
+ficheiros = sorted(f for f in os.listdir("dados/ONU") if f.endswith(".xml"))
+if len(ficheiros) < 2:
+    print("Só existe uma versão; nada a comparar.")
+    exit()
+
+
+antiga = carregar(f"dados/ONU/{ficheiros[-2]}")
+nova = carregar(f"dados/ONU/{ficheiros[-1]}")
 comuns = antiga.keys() & nova.keys()
 adicionados = nova.keys() - antiga.keys()
 removidos = antiga.keys() - nova.keys()
@@ -92,23 +114,6 @@ for ref in comuns:
 
 corpo_email = formatar(adicionados, removidos, modificados)
 
-
-#if corpo_email:
-    #enviar(corpo_email)
-
-def criar_ficheiro():
-    conteudo = urllib.request.urlopen(os.getenv("URL_ONU")).read()
-    hash_ficheiro = hashlib.sha256(conteudo).hexdigest()
-    carimbo = datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    caminho = f"dados/ONU/ONU_{carimbo}.xml"
-
-    os.makedirs("dados/ONU", exist_ok=True)
-    with open(caminho, "wb") as f:
-        f.write(conteudo)
-
-    with open("dados/ONU/registo.csv", "a") as f:
-        f.write(f"{carimbo},{caminho},{hash_ficheiro},{len(conteudo)}\n")
-
-    return caminho
-
-criar_ficheiro()
+if corpo_email:
+    enviar(corpo_email)
+    
