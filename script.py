@@ -3,6 +3,9 @@ import os
 from dotenv import load_dotenv
 import smtplib
 from email.message import EmailMessage
+import urllib.request
+import hashlib
+from datetime import datetime
 
 
 load_dotenv()
@@ -90,8 +93,22 @@ for ref in comuns:
 corpo_email = formatar(adicionados, removidos, modificados)
 
 
-if corpo_email:
-    enviar(corpo_email)
+#if corpo_email:
+    #enviar(corpo_email)
 
+def criar_ficheiro():
+    conteudo = urllib.request.urlopen(os.getenv("URL_ONU")).read()
+    hash_ficheiro = hashlib.sha256(conteudo).hexdigest()
+    carimbo = datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    caminho = f"dados/ONU/ONU_{carimbo}.xml"
 
+    os.makedirs("dados/ONU", exist_ok=True)
+    with open(caminho, "wb") as f:
+        f.write(conteudo)
 
+    with open("dados/ONU/registo.csv", "a") as f:
+        f.write(f"{carimbo},{caminho},{hash_ficheiro},{len(conteudo)}\n")
+
+    return caminho
+
+criar_ficheiro()
