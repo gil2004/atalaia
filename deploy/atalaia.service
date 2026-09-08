@@ -1,0 +1,7 @@
+[Unit]
+Description=Atalaia — monitorização de sanções
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/Secretária/projetos/atalaia
+ExecStart=/usr/bin/docker run --rm --env-file .env -v ./dados:/app/dados atalaia

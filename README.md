@@ -17,6 +17,10 @@ quando algo muda. Sem alterações, não envia nada.
    descem ao nível do campo, com valor anterior e novo.
 4. **Entrega** — formata o resultado e envia por email.
 
+Corre em container, agendado diariamente por um systemd timer. Os dados
+persistem num volume; as credenciais são injetadas na execução e nunca
+entram na imagem.
+
 ## Decisões de desenho
 
 **A comparação é ao nível da entidade, não do ficheiro.** O XML da ONU traz
@@ -37,7 +41,12 @@ da etiqueta geraria uma alteração inexistente.
 **Sem duas versões, não há comparação.** Na primeira execução o programa
 arquiva e termina, em vez de reportar a lista inteira como adições.
 
+**Uma única dependência externa**, por escolha deliberada: `python-dotenv`.
+Tudo o resto usa a biblioteca padrão.
+
 ## Configuração
+
+Criar um `.env` na raiz com:
 
 ```
 URL_ONU=
@@ -49,19 +58,25 @@ REMETENTE=
 DESTINATARIO=
 ```
 
+## Execução
+
 ```
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python script.py
+docker build -t atalaia .
+docker run --rm --env-file .env -v ./dados:/app/dados atalaia
 ```
+
+As unidades de systemd para o agendamento estão em `deploy/`.
 
 ## Estado
 
-Fase 1 em curso: uma fonte de ponta a ponta. Ingestão, deteção e entrega
-funcionais; falta containerizar, agendar e pôr a correr num servidor.
+**Fase 1 concluída**: uma fonte de ponta a ponta, a correr sozinha —
+ingestão agendada, arquivo com prova de integridade, deteção de alterações
+e alertas por email.
+
+A correr numa máquina local; migração para servidor pendente.
 
 Fases seguintes: listas da UE e da OFAC; resumo por LLM restringido ao diff
-estruturado, com conjunto de avaliação a correr em CI; painel e API.
+estruturado, com conjunto de avaliação a correr em CI; observabilidade,
+painel e API.
 
-As decisões de engenharia e os riscos conhecidos estão em `notas.md`.
+As decisões de engenharia, medições e riscos conhecidos estão em `notas.md`.

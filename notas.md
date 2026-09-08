@@ -44,6 +44,29 @@ todas XML. Cada leitor normaliza para a mesma estrutura interna;
 comparação, formatação e envio são comuns. Sem deduplicação entre fontes —
 seria record linkage.
 
+**Imagem Docker.** Base python:3.12-slim com versão fixa: latest mudaria por
+baixo dos pés. COPY requirements.txt antes do COPY . . para a camada do pip
+install só ser refeita quando as dependências mudam — o que muda pouco vai
+primeiro.
+
+**Segredos na execução, não na construção.** O .env está no .dockerignore;
+as variáveis entram com --env-file no arranque. A imagem é um artefacto
+partilhável e nunca contém credenciais.
+Limite assumido: quem tenha acesso à máquina consegue inspecioná-las. Em
+produção a sério usa-se um gestor de segredos.
+
+**Volume para os dados.** Um container é descartável e o que escreve morre
+com ele — sem volume, nunca haveria duas versões para comparar.
+Programa descartável, dados persistentes.
+
+**systemd timer, não cron.** Regista a saída no journal, mostra o estado da
+última execução, e Persistent=true recupera execuções perdidas se a máquina
+estiver desligada à hora marcada. Unidades versionadas em deploy/.
+
+**Códigos de saída.** 0 é sucesso, diferente de 0 é falha. É o sinal em que
+o systemd, o Docker e o CI assentam. Já disponível; falta alguém a reagir
+a ele.
+
 ## Medições (versão de 2026-08-25)
 736 indivíduos. DATAID e REFERENCE_NUMBER: 736 distintos, nenhum em falta.
 FIRST_NAME: 550 distintos — nomes não servem como identidade.
@@ -67,6 +90,9 @@ Nunca misturar fixtures com dados reais em dados/.
   passam despercebidos, campos novos dão KeyError. Usar a união.
 - Falha de rede rebenta sem avisar ninguém. "Não consegui verificar" tem
   de ser distinguível de "não houve alterações".
+- Os print não aparecem no journal. Um sistema que corre sem ninguém
+  precisa de logging a sério, não de saída para terminal.
+- O portátil não é sítio para isto viver: fecha-se e desliga-se.
 - Chave SMTP expira a 2027-08-27. Um sistema de alertas que deixa de
   alertar falha em silêncio.
 
@@ -77,10 +103,15 @@ Nunca misturar fixtures com dados reais em dados/.
   cedo.
 - "dados/ONU" repetido em quatro sítios; extrair para constante.
 
+## Em aberto
+- Guardar todas as versões, mesmo as de conteúdo idêntico? Um ano diário dá
+  365 ficheiros de 2 MB para talvez 20 conteúdos distintos. Não guardar
+  poupa espaço mas perde a prova de que se verificou naquele dia.
+
 ## Por fazer
-- Container, agendamento, servidor.
+- Logging estruturado e alerta quando a ingestão falha.
+- Migrar para servidor.
 - Agrupar adicionados/removidos/modificados numa estrutura única.
-- Tratamento de falhas de ingestão.
 - Testes com pytest e fixtures XML mínimos, versionados.
 - CI que bloqueia merges.
 - Dividir em módulos: parsing, comparação, notificação.
