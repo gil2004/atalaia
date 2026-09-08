@@ -69,14 +69,14 @@ As unidades de systemd para o agendamento estão em `deploy/`.
 
 ## Estado
 
-**Fase 1 concluída**: uma fonte de ponta a ponta, a correr sozinha —
-ingestão agendada, arquivo com prova de integridade, deteção de alterações
-e alertas por email.
+**Fase 1 concluída**: uma fonte de ponta a ponta, em produção — ingestão
+agendada, arquivo com prova de integridade, deteção de alterações ao nível
+da entidade e alertas por email.
 
-A correr numa máquina local; migração para servidor pendente.
+Em execução num VPS (Nuremberga, Ubuntu 24.04), em container, agendado por
+systemd timer às 03:00 UTC.
 
 Fases seguintes: listas da UE e da OFAC; resumo por LLM restringido ao diff
 estruturado, com conjunto de avaliação a correr em CI; observabilidade,
 painel e API.
 
-As decisões de engenharia, medições e riscos conhecidos estão em `notas.md`.
