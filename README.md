@@ -41,8 +41,12 @@ da etiqueta geraria uma alteração inexistente.
 **Sem duas versões, não há comparação.** Na primeira execução o programa
 arquiva e termina, em vez de reportar a lista inteira como adições.
 
-**Uma única dependência externa**, por escolha deliberada: `python-dotenv`.
-Tudo o resto usa a biblioteca padrão.
+**Uma única dependência de execução**, por escolha deliberada:
+`python-dotenv`. Tudo o resto usa a biblioteca padrão. As ferramentas de
+teste estão separadas em `requirements-dev.txt` e não entram na imagem.
+
+**Servidor em UTC, acesso só por chave SSH.** Login de root e autenticação
+por palavra-passe desativados.
 
 ## Configuração
 
@@ -67,6 +71,18 @@ docker run --rm --env-file .env -v ./dados:/app/dados atalaia
 
 As unidades de systemd para o agendamento estão em `deploy/`.
 
+## Testes
+
+```
+pip install -r requirements-dev.txt
+pytest
+```
+
+Os fixtures em `testes/fixtures/` são XML mínimos com alterações conhecidas
+— uma remoção, uma adição, uma modificação em vários campos, e uma entidade
+inalterada para detetar falsos positivos. Testar contra dados fabricados
+evita depender de a fonte real mudar.
+
 ## Estado
 
 **Fase 1 concluída**: uma fonte de ponta a ponta, em produção — ingestão
@@ -76,7 +92,8 @@ da entidade e alertas por email.
 Em execução num VPS (Nuremberga, Ubuntu 24.04), em container, agendado por
 systemd timer às 03:00 UTC.
 
+Em curso: cobertura de testes e CI.
+
 Fases seguintes: listas da UE e da OFAC; resumo por LLM restringido ao diff
 estruturado, com conjunto de avaliação a correr em CI; observabilidade,
 painel e API.
-
