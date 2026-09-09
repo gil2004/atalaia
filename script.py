@@ -87,33 +87,36 @@ def criar_ficheiro():
 
     return caminho
 
-caminho_novo = criar_ficheiro()
-ficheiros = sorted(f for f in os.listdir("dados/ONU") if f.endswith(".xml"))
-if len(ficheiros) < 2:
-    print("Só existe uma versão; nada a comparar.")
-    exit()
 
 
-antiga = carregar(f"dados/ONU/{ficheiros[-2]}")
-nova = carregar(f"dados/ONU/{ficheiros[-1]}")
-comuns = antiga.keys() & nova.keys()
-adicionados = nova.keys() - antiga.keys()
-removidos = antiga.keys() - nova.keys()
+if __name__ == "__main__":
+    caminho_novo = criar_ficheiro()
+    ficheiros = sorted(f for f in os.listdir("dados/ONU") if f.endswith(".xml"))
+    if len(ficheiros) < 2:
+        print("Só existe uma versão; nada a comparar.")
+        exit()
 
-modificados = {}
-for ref in comuns:
-    if antiga[ref] != nova[ref]:
-        campos = {}
-        for campo in nova[ref]:
-            if antiga[ref][campo] != nova[ref][campo]:
-                campos[campo] = {
-                    "old": antiga[ref][campo],
-                    "new": nova[ref][campo]
-                }
-        modificados[ref] = campos
 
-corpo_email = formatar(adicionados, removidos, modificados)
+    antiga = carregar(f"dados/ONU/{ficheiros[-2]}")
+    nova = carregar(f"dados/ONU/{ficheiros[-1]}")
+    comuns = antiga.keys() & nova.keys()
+    adicionados = nova.keys() - antiga.keys()
+    removidos = antiga.keys() - nova.keys()
 
-if corpo_email:
-    enviar(corpo_email)
+    modificados = {}
+    for ref in comuns:
+        if antiga[ref] != nova[ref]:
+            campos = {}
+            for campo in nova[ref]:
+                if antiga[ref][campo] != nova[ref][campo]:
+                    campos[campo] = {
+                        "old": antiga[ref][campo],
+                        "new": nova[ref][campo]
+                    }
+            modificados[ref] = campos
+
+    corpo_email = formatar(adicionados, removidos, modificados)
+
+    if corpo_email:
+        enviar(corpo_email)
     

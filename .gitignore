@@ -1,5 +1,6 @@
 .env
-*.xml
+!testes/fixtures/*.xml
 __pycache__/
 .venv/
 dados/
+.pytest_cache/
