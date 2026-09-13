@@ -87,6 +87,24 @@ def criar_ficheiro():
 
     return caminho
 
+def comparar(antiga, nova):
+    comuns = antiga.keys() & nova.keys()
+    adicionados = nova.keys() - antiga.keys()
+    removidos = antiga.keys() - nova.keys()
+    
+    modificados = {}
+    for ref in comuns:
+        if antiga[ref] != nova[ref]:
+            campos = {}
+            for campo in nova[ref]:
+                if antiga[ref][campo] != nova[ref][campo]:
+                    campos[campo] = {
+                        "old": antiga[ref][campo],
+                        "new": nova[ref][campo]
+                    }
+            modificados[ref] = campos
+    return adicionados, removidos, modificados
+
 
 
 if __name__ == "__main__":
@@ -99,24 +117,9 @@ if __name__ == "__main__":
 
     antiga = carregar(f"dados/ONU/{ficheiros[-2]}")
     nova = carregar(f"dados/ONU/{ficheiros[-1]}")
-    comuns = antiga.keys() & nova.keys()
-    adicionados = nova.keys() - antiga.keys()
-    removidos = antiga.keys() - nova.keys()
-
-    modificados = {}
-    for ref in comuns:
-        if antiga[ref] != nova[ref]:
-            campos = {}
-            for campo in nova[ref]:
-                if antiga[ref][campo] != nova[ref][campo]:
-                    campos[campo] = {
-                        "old": antiga[ref][campo],
-                        "new": nova[ref][campo]
-                    }
-            modificados[ref] = campos
-
+    adicionados, removidos, modificados = comparar(antiga, nova)
     corpo_email = formatar(adicionados, removidos, modificados)
-
+    
     if corpo_email:
         enviar(corpo_email)
     
