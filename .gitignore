@@ -1,4 +1,5 @@
 .env
+*.xml
 !testes/fixtures/*.xml
 __pycache__/
 .venv/
