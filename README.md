@@ -82,18 +82,3 @@ Os fixtures em `testes/fixtures/` são XML mínimos com alterações conhecidas
 — uma remoção, uma adição, uma modificação em vários campos, e uma entidade
 inalterada para detetar falsos positivos. Testar contra dados fabricados
 evita depender de a fonte real mudar.
-
-## Estado
-
-**Fase 1 concluída**: uma fonte de ponta a ponta, em produção — ingestão
-agendada, arquivo com prova de integridade, deteção de alterações ao nível
-da entidade e alertas por email.
-
-Em execução num VPS (Nuremberga, Ubuntu 24.04), em container, agendado por
-systemd timer às 03:00 UTC.
-
-Em curso: cobertura de testes e CI.
-
-Fases seguintes: listas da UE e da OFAC; resumo por LLM restringido ao diff
-estruturado, com conjunto de avaliação a correr em CI; observabilidade,
-painel e API.
